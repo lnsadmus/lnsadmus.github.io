@@ -591,7 +591,7 @@
                     return obj;
                 }).filter(row => row["Date du contenu"]); // remove empty rows
 
-                if (allData.length === 0) throw new Error('Aucune ligne valide');
+                //if (allData.length === 0) throw new Error('Aucune ligne valide');
 
                 // Populate filters
                 populateFilters();
@@ -614,4 +614,5 @@
         window.onload = loadDashboard;
     </script>
 </body>
+
 </html>
