@@ -271,8 +271,9 @@ const CSV_URL = "https://script.google.com/macros/s/AKfycbzg0Ch-kElonNhVguxO33eh
                     const parts = cell.split(/\s+/);
                     parts.forEach(p => {
                         const trimmed = p.trim();
-                        if (trimmed.startsWith('#') && trimmed.length > 1) {
-                            tags.add(trimmed);
+                        //if (trimmed.startsWith('#') && trimmed.length > 1) {
+                         if (trimmed.startsWith('#')) {
+                           tags.add(trimmed);
                         }
                     });
                 }
