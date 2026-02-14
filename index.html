@@ -571,109 +571,78 @@ const CSV_URL = "https://script.google.com/macros/s/AKfycbzg0Ch-kElonNhVguxO33eh
         }
 
         // ==================== MAIN LOAD ====================
-        async function loadDashboard() {
-            const errorOverlay = document.getElementById('error-overlay');
-            
-            try {
+async function loadDashboard() {
+    const errorOverlay = document.getElementById('error-overlay');
+    
+    try {
+        const SPREADSHEET_ID = '1qo33mlAhLdedEjFFZSP_j6CyF5Atdnuy1L9jd7vjyvc';
+        const API_KEY = 'AIzaSyCYRoIiIE95yZlaHbcxAKxS8iqD2rJZfD0';  // Keep yours
+        const SHEET_NAME = 'Form Responses 1';
 
+        const range = encodeURIComponent(`${SHEET_NAME}!A:Z`);
+        const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}?key=${API_KEY}`;
 
-                
-//----------------------------------------------------------------------------------------
-                
-               // const response = await fetch(CSV_URL);
-
-//const response = await fetch(CSV_URL, {
-//  method: 'GET',
-//  mode: 'no-cors',          // ← key line
-//  cache: 'no-cache',
-//  redirect: 'follow'
-//});
-
-/*const response = await fetch(CSV_URL, {
-  method: 'GET',
-  mode: 'cors',             // default anyway
-  credentials: 'omit',      // important – no cookies
-  cache: 'no-cache',
-  headers: {
-    'Accept': 'text/csv',           // simple header
-    // Do NOT set Content-Type or any custom header here
-  }
-});                
-                
-                if (!response.ok) throw new Error('Impossible de récupérer le fichier CSV');
-                
-                const csvText = await response.text();
-                const parsedRows = parseCSV(csvText);
-                
-                if (parsedRows.length < 2) throw new Error('Aucune donnée trouvée');
-                
-                // Create headers
-                const headers = parsedRows[0].map(h => h.trim());
-                
-                // Create data objects
-                allData = parsedRows.slice(1).map(row => {
-                    const obj = {};
-                    headers.forEach((header, i) => {
-                        obj[header] = (row[i] || '').trim();
-                    });
-                    return obj;
-                }).filter(row => row["Date du contenu"]); // remove empty rows
-
-                //if (allData.length === 0) throw new Error('Aucune ligne valide');
-*/
-//----------------------------------------------------------
-
-//const SPREADSHEET_ID = '1vQb6ZvGw9im_FrK9riRIUwe5vQ3YBJ5dOknOhC7T4bYchlK_1I9nSJ7nM0Es4jzHmYDO7hDUfxn94HY';
-   const SPREADSHEET_ID = '1qo33mlAhLdedEjFFZSP_j6CyF5Atdnuy1L9jd7vjyvc';
-const API_KEY = 'AIzaSyCYRoIiIE95yZlaHbcxAKxS8iqD2rJZfD0';  // ← paste your key
-const SHEET_NAME = 'Form Responses 1';  // or use gid if preferred
-
-const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${encodeURIComponent(SHEET_NAME)}!A1:ZZ?key=${API_KEY}`;
-
-const response = await fetch(url);
-if (!response.ok) {
-  throw new Error(`Sheets API error: ${response.status} - ${await response.text()}`);
-}
-
-const data = await response.json();
-const rows = data.values;  // array of arrays: [ [header1, header2, ...], [row1col1, row1col2, ...], ... ]
-
-if (!rows || rows.length < 2) {
-  throw new Error('No data found in sheet');
-}
-
-// Convert to array of objects (like before)
-const headers = rows[0].map(h => h.trim());
-allData = rows.slice(1).map(row => {
-  const obj = {};
-  headers.forEach((header, i) => {
-    obj[header] = (row[i] || '').trim();
-  });
-  return obj;
-}).filter(row => row["Date du contenu"]);  // keep your filter
-
-//if (allData.length === 0) {
-  //throw new Error('Aucune ligne valide après filtrage');
-//}
-
-//--------------------------------------------------------------------                
-                
-                // Populate filters
-                populateFilters();
-                
-                // First render
-                updateDashboard();
-                
-                // Update last updated
-                document.getElementById('last-updated').textContent = 
-                    'Dernière mise à jour : ' + new Date().toLocaleTimeString('fr-FR');
-
-            } catch (err) {
-                console.error(err);
-                document.getElementById('error-message').textContent = err.message || 'Erreur inconnue lors du chargement des données.';
-                errorOverlay.classList.remove('hidden');
-            }
+        const response = await fetch(url);
+        if (!response.ok) {
+            const errText = await response.text();
+            throw new Error(`Sheets API error: ${response.status} - ${errText}`);
         }
+
+        const data = await response.json();
+        const rows = data.values || [];
+
+        if (rows.length < 2) {
+            throw new Error('No data found in sheet');
+        }
+
+        // Headers from row 0
+        const headers = rows[0].map(h => h.trim());
+
+        // Updated theme columns based on actual sheet
+        const THEME_COLUMNS = [
+            "Thèmes 2/ Tags principaux (choisissez 1 à 3)",
+            "Thèmes 3/ Tags principaux (choisissez 1 à 3)",
+            "Thèmes 4/ Tags principaux (choisissez 1 à 3)",
+            "Thèmes 5/ Tags principaux (choisissez 1 à 3)",
+            "Thèmes 6/ Tags principaux (choisissez 1 à 3)",
+            "Thèmes 7/ Tags principaux (choisissez 1 à 3)",
+            "Thèmes 8/ Tags principaux (choisissez 1 à 3)",
+            "Thèmes 9/ Tags principaux (choisissez 1 à 3)"
+        ];
+
+        // Build data objects
+        allData = rows.slice(1).map(row => {
+            const obj = {};
+            headers.forEach((header, i) => {
+                obj[header] = (row[i] || '').trim();
+            });
+            return obj;
+        }).filter(row => {
+            // More forgiving filter: check multiple possible date fields
+            const dateField = row["Date du contenu (si connue)"] || row["Date du contenu"] || '';
+            return dateField && dateField.trim() !== '';
+        });
+
+        console.log('Parsed rows:', allData.length);               // Should be 5
+        console.log('First entry:', allData[0]);                   // Inspect in browser console (F12)
+        console.log('Sample themes from first row:', getAllTags(allData[0]));
+
+        if (allData.length === 0) {
+            throw new Error('Aucune ligne valide après filtrage – vérifiez les noms de colonnes');
+        }
+
+        populateFilters();
+        updateDashboard();
+
+        document.getElementById('last-updated').textContent = 
+            'Dernière mise à jour : ' + new Date().toLocaleTimeString('fr-FR');
+
+    } catch (err) {
+        console.error(err);
+        document.getElementById('error-message').textContent = err.message || 'Erreur lors du chargement.';
+        errorOverlay.classList.remove('hidden');
+    }
+}
 
         // Tailwind script already loaded via CDN
         window.onload = loadDashboard;
@@ -681,6 +650,7 @@ allData = rows.slice(1).map(row => {
 </body>
 
 </html>
+
 
 
 
