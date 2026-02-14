@@ -201,14 +201,14 @@ const CSV_URL = "https://script.google.com/macros/s/AKfycbzg0Ch-kElonNhVguxO33eh
         
 
         const THEME_COLUMNS = [
-            "Thèmes 2/ Tags principaux",
-            "Thèmes 3/ Tags principaux",
-            "Thèmes 4/ Tags principaux",
-            "Thèmes 5/ Tags principaux",
-            "Thèmes 6/ Tags principaux",
-            "Thèmes 8/ Tags principaux",
-            "Thèmes 7/ Tags principaux",
-            "Thèmes 9/ Tags principaux"
+            "Thèmes 2/ Tags principaux (choisissez 1 à 3)",
+            "Thèmes 3/ Tags principaux (choisissez 1 à 3)",
+            "Thèmes 4/ Tags principaux (choisissez 1 à 3)",
+            "Thèmes 5/ Tags principaux (choisissez 1 à 3)",
+            "Thèmes 6/ Tags principaux (choisissez 1 à 3)",
+            "Thèmes 8/ Tags principaux (choisissez 1 à 3)",
+            "Thèmes 7/ Tags principaux (choisissez 1 à 3)",
+            "Thèmes 9/ Tags principaux (choisissez 1 à 3)"
         ];
 
         // ==================== CSV PARSER ====================
@@ -271,8 +271,7 @@ const CSV_URL = "https://script.google.com/macros/s/AKfycbzg0Ch-kElonNhVguxO33eh
                     const parts = cell.split(/\s+/);
                     parts.forEach(p => {
                         const trimmed = p.trim();
-                        //if (trimmed.startsWith('#') && trimmed.length > 1) {
-                         if (trimmed.startsWith('#')) {
+                        if (trimmed.startsWith('#') && trimmed.length > 1) {
                            tags.add(trimmed);
                         }
                     });
@@ -453,8 +452,8 @@ const CSV_URL = "https://script.google.com/macros/s/AKfycbzg0Ch-kElonNhVguxO33eh
         function renderTable(filtered) {
             // Sort by date descending
             const sorted = [...filtered].sort((a, b) => {
-                const dateA = new Date(a["Date du contenu"]);
-                const dateB = new Date(b["Date du contenu"]);
+                const dateA = new Date(a["Date du contenu (si connue)"]);
+                const dateB = new Date(b["Date du contenu (si connue)"]);
                 return isNaN(dateB) ? -1 : isNaN(dateA) ? 1 : dateB - dateA;
             }).slice(0, 15);
 
@@ -463,9 +462,9 @@ const CSV_URL = "https://script.google.com/macros/s/AKfycbzg0Ch-kElonNhVguxO33eh
 
             sorted.forEach(row => {
                 const tags = getAllTags(row);
-                const dateFormatted = formatDate(row["Date du contenu"]);
-                const summary = (row["Résumé bref du contenu"] || '').substring(0, 120) + 
-                               ((row["Résumé bref du contenu"] || '').length > 120 ? '…' : '');
+                const dateFormatted = formatDate(row["Date du contenu (si connue)"]);
+                const summary = (row["Résumé bref du contenu (1-2 phrases)"] || '').substring(0, 120) + 
+                               ((row["Résumé bref du contenu (1-2 phrases)"] || '').length > 120 ? '…' : '');
                 
                 let urgencyClass = 'bg-zinc-700 text-zinc-300';
                 const urgencyText = row["Niveau d'urgence / Catégorie"] || '—';
