@@ -575,7 +575,15 @@ const CSV_URL = "https://script.google.com/macros/s/AKfycbzg0Ch-kElonNhVguxO33eh
             const errorOverlay = document.getElementById('error-overlay');
             
             try {
-                const response = await fetch(CSV_URL);
+               // const response = await fetch(CSV_URL);
+
+const response = await fetch(CSV_URL, {
+  method: 'GET',
+  mode: 'no-cors',          // ← key line
+  cache: 'no-cache',
+  redirect: 'follow'
+});
+                
                 if (!response.ok) throw new Error('Impossible de récupérer le fichier CSV');
                 
                 const csvText = await response.text();
@@ -620,6 +628,7 @@ const CSV_URL = "https://script.google.com/macros/s/AKfycbzg0Ch-kElonNhVguxO33eh
 </body>
 
 </html>
+
 
 
 
