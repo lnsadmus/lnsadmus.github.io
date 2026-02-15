@@ -93,7 +93,7 @@
                             <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vous êtes :</th>
                             <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Langue</th>
                             <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Durée estimée</th>
-                            <td class="px-6 py-5 text-sm text-gray-700">${row["Votre nom complet"] || "—"}</td>
+                            <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nom</th>
                         </tr>
                     </thead>
                     <tbody id="table-body" class="bg-white divide-y divide-gray-200"></tbody>
@@ -288,6 +288,7 @@
                     <td class="px-6 py-5 text-sm text-gray-700">${row["Vous êtes :"] || "—"}</td>
                     <td class="px-6 py-5 text-sm text-gray-700">${row["Langue principale de la session"] || "—"}</td>
                     <td class="px-6 py-5 text-sm text-gray-700">${row["Durée estimée"] || "—"}</td>
+                    <td class="px-6 py-5 text-sm text-gray-700">${row["Votre nom complet"] || "—"}</td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -311,4 +312,5 @@
     </script>
 </body>
 </html>
+
 
