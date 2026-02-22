@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Savoir Partagé • Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap');
+        body { font-family: 'Inter', system-ui, sans-serif; }
+        .title-font { font-family: 'Space Grotesk', sans-serif; }
+        .card { transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
+        .card:hover { transform: translateY(-6px); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.08); }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Header -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-10 gap-4">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 bg-emerald-600 rounded-2xl flex items-center justify-center text-white text-2xl font-bold shadow-md">SP</div>
+                <div>
+                    <h1 class="title-font text-3xl sm:text-4xl font-semibold tracking-tight text-gray-900">Savoir Partagé</h1>
+                    <p class="text-emerald-700 text-base sm:text-lg">Gestion des propositions de webinaires</p>
+                </div>
+            </div>
+            <div id="last-updated" class="text-sm text-gray-500"></div>
+        </div>
+
+        <!-- Metrics Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10" id="metrics"></div>
+
+        <!-- Filters -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-10">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-5">
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Statut</label>
+                    <select id="status-filter" onchange="updateDashboard()" class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition">
+                        <option value="">Tous les statuts</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Langue</label>
+                    <select id="lang-filter" onchange="updateDashboard()" class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition">
+                        <option value="">Toutes les langues</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Thématique</label>
+                    <select id="tag-filter" onchange="updateDashboard()" class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition">
+                        <option value="">Toutes les thématiques</option>
+                    </select>
+                </div>
+                <div class="flex items-end">
+                    <button onclick="resetFilters()" class="w-full bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded-xl py-3 px-4 text-sm font-medium transition-colors">
+                        Réinitialiser
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                <h3 class="font-semibold text-lg mb-5 text-gray-800">Thématiques les plus populaires</h3>
+                <div class="h-72"><canvas id="tagsChart"></canvas></div>
+            </div>
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                <h3 class="font-semibold text-lg mb-5 text-gray-800">Répartition par langue</h3>
+                <div class="h-72"><canvas id="langChart"></canvas></div>
+            </div>
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                <h3 class="font-semibold text-lg mb-5 text-gray-800">Statut des propositions</h3>
+                <div class="h-72"><canvas id="statusChart"></canvas></div>
+            </div>
+        </div>
+
+        <!-- Data Table -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+            <div class="px-6 py-5 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-xl font-semibold text-gray-900">Propositions de webinaires</h2>
+                    <p class="text-sm text-gray-500">Filtrées selon vos critères actuels</p>
+                </div>
+                <div id="table-count" class="text-sm text-gray-600 font-medium"></div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Titre du webinaire</th>
+                            <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vous êtes :</th>
+                            <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Langue</th>
+                            <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Durée estimée</th>
+                            <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nom</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body" class="bg-white divide-y divide-gray-200"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Overlay -->
+    <div id="error-overlay" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-8 text-center shadow-2xl">
+            <div class="text-6xl mb-4">⚠️</div>
+            <h3 class="text-xl font-bold mb-3 text-gray-900">Erreur de chargement</h3>
+            <p id="error-message" class="text-gray-600 mb-6"></p>
+            <button onclick="location.reload()" class="px-8 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-medium transition">
+                Réessayer
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = "https://sheets.googleapis.com/v4/spreadsheets/13GrGaiKNJ9K76nO4U1vBP_adfF8dR7ERe5l9f0mOV-c/values/Form%20Responses%201!A:Z?key=AIzaSyCYRoIiIE95yZlaHbcxAKxS8iqD2rJZfD0";
+
+        let allData = [];
+        let tagsChart = null;
+        let langChart = null;
+        let statusChart = null;
+
+        function getTags(row) {
+            const cell = row["Tags / Thématiques (choisissez 1 à 3)"] || "";
+            return cell.split(/[,;]\s*/).map(t => t.trim()).filter(t => t.startsWith("#"));
+        }
+
+        async function loadData() {
+            try {
+                const res = await fetch(API_URL);
+                if (!res.ok) throw new Error(`Erreur ${res.status}: ${await res.text()}`);
+                const json = await res.json();
+                const rows = json.values || [];
+
+                if (rows.length < 2) throw new Error("Aucune donnée dans la feuille");
+
+                const headers = rows[0].map(h => h.trim());
+                allData = rows.slice(1).map(row => {
+                    const obj = {};
+                    headers.forEach((h, i) => { obj[h] = (row[i] || "").trim(); });
+                    return obj;
+                }).filter(row => row.Timestamp && row["Titre provisoire du webinaire / du thème proposé"]);
+
+                populateFilters();
+                updateDashboard();
+
+                document.getElementById("last-updated").textContent = 
+                    `Dernière mise à jour : ${new Date().toLocaleTimeString("fr-FR")}`;
+            } catch (err) {
+                console.error(err);
+                document.getElementById("error-message").textContent = err.message || "Vérifiez l'accès à la feuille ou la clé API.";
+                document.getElementById("error-overlay").classList.remove("hidden");
+            }
+        }
+
+        function populateFilters() {
+            // Status
+            const statuses = [...new Set(allData.map(r => r.Statut).filter(Boolean))].sort();
+            const selStatus = document.getElementById("status-filter");
+            selStatus.innerHTML = `<option value="">Tous les statuts</option>`;
+            statuses.forEach(s => selStatus.insertAdjacentHTML("beforeend", `<option value="${s}">${s}</option>`));
+
+            // Language
+            const langs = [...new Set(allData.map(r => r["Langue principale de la session"]).filter(Boolean))].sort();
+            const selLang = document.getElementById("lang-filter");
+            selLang.innerHTML = `<option value="">Toutes les langues</option>`;
+            langs.forEach(l => selLang.insertAdjacentHTML("beforeend", `<option value="${l}">${l}</option>`));
+
+            // Tags
+            const allTags = new Set();
+            allData.forEach(r => getTags(r).forEach(t => allTags.add(t)));
+            const selTag = document.getElementById("tag-filter");
+            selTag.innerHTML = `<option value="">Toutes les thématiques</option>`;
+            [...allTags].sort().forEach(t => selTag.insertAdjacentHTML("beforeend", `<option value="${t}">${t}</option>`));
+        }
+
+        function getFilteredData() {
+            let data = allData;
+            const status = document.getElementById("status-filter").value;
+            const lang = document.getElementById("lang-filter").value;
+            const tag = document.getElementById("tag-filter").value;
+
+            if (status) data = data.filter(r => r.Statut === status);
+            if (lang) data = data.filter(r => r["Langue principale de la session"] === lang);
+            if (tag) data = data.filter(r => getTags(r).includes(tag));
+
+            return data;
+        }
+
+        function renderMetrics(filtered) {
+            const total = filtered.length;
+            const accepted = filtered.filter(r => r.Statut === "Acceptée").length;
+            const pending = filtered.filter(r => r.Statut === "À examiner").length;
+            const uniquePresenters = new Set(filtered.map(r => r["Votre nom complet"]).filter(Boolean)).size;
+
+            document.getElementById("metrics").innerHTML = `
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 card">
+                    <div class="text-4xl font-bold text-emerald-600">${total}</div>
+                    <div class="mt-1 text-sm text-gray-600">Propositions totales</div>
+                </div>
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 card">
+                    <div class="text-4xl font-bold text-emerald-600">${accepted}</div>
+                    <div class="mt-1 text-sm text-gray-600">Acceptées</div>
+                </div>
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 card">
+                    <div class="text-4xl font-bold text-amber-600">${pending}</div>
+                    <div class="mt-1 text-sm text-gray-600">À examiner</div>
+                </div>
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 card">
+                    <div class="text-4xl font-bold text-gray-700">${uniquePresenters}</div>
+                    <div class="mt-1 text-sm text-gray-600">Présentateurs uniques</div>
+                </div>
+            `;
+        }
+
+        function renderCharts(filtered) {
+            // Tags (Bar)
+            const tagCounts = {};
+            filtered.forEach(r => getTags(r).forEach(t => tagCounts[t] = (tagCounts[t] || 0) + 1));
+            const topTags = Object.entries(tagCounts).sort((a,b)=>b[1]-a[1]).slice(0,10);
+
+            if (tagsChart) tagsChart.destroy();
+            tagsChart = new Chart(document.getElementById("tagsChart"), {
+                type: 'bar',
+                data: {
+                    labels: topTags.map(([t]) => t),
+                    datasets: [{ label: 'Occurrences', data: topTags.map(([,c]) => c), backgroundColor: '#10b981', borderRadius: 6 }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, tooltip: { enabled: true } },
+                    scales: { y: { beginAtZero: true, grid: { color: '#e5e7eb' } }, x: { grid: { display: false } } }
+                }
+            });
+
+            // Language (Pie)
+            const langCounts = {};
+            filtered.forEach(r => {
+                const l = r["Langue principale de la session"];
+                if (l) langCounts[l] = (langCounts[l] || 0) + 1;
+            });
+
+            if (langChart) langChart.destroy();
+            langChart = new Chart(document.getElementById("langChart"), {
+                type: 'pie',
+                data: {
+                    labels: Object.keys(langCounts),
+                    datasets: [{ data: Object.values(langCounts), backgroundColor: ['#10b981','#3b82f6','#8b5cf6','#f59e0b','#ec4899'], borderWidth: 1 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+            });
+
+            // Status (Horizontal Bar)
+            const statusCounts = {};
+            filtered.forEach(r => {
+                const s = r.Statut;
+                if (s) statusCounts[s] = (statusCounts[s] || 0) + 1;
+            });
+
+            if (statusChart) statusChart.destroy();
+            statusChart = new Chart(document.getElementById("statusChart"), {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(statusCounts),
+                    datasets: [{ label: 'Propositions', data: Object.values(statusCounts), backgroundColor: '#6366f1', borderRadius: 6 }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+                    plugins: { legend: { display: false } },
+                    scales: { x: { beginAtZero: true } }
+                }
+            });
+        }
+
+        function renderTable(filtered) {
+            const tbody = document.getElementById("table-body");
+            tbody.innerHTML = "";
+
+            const sorted = [...filtered].sort((a,b) => new Date(b.Timestamp) - new Date(a.Timestamp));
+
+            sorted.forEach(row => {
+                const tr = document.createElement("tr");
+                tr.className = "hover:bg-gray-50 transition-colors";
+                tr.innerHTML = `
+                    <td class="px-6 py-5 text-sm font-medium text-gray-900">${row["Titre provisoire du webinaire / du thème proposé"] || "—"}</td>
+                    <td class="px-6 py-5 text-sm text-gray-700">${row["Vous êtes :"] || "—"}</td>
+                    <td class="px-6 py-5 text-sm text-gray-700">${row["Langue principale de la session"] || "—"}</td>
+                    <td class="px-6 py-5 text-sm text-gray-700">${row["Durée estimée"] || "—"}</td>
+                    <td class="px-6 py-5 text-sm text-gray-700">${row["Votre nom complet"] || "—"}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById("table-count").textContent = `${sorted.length} proposition${sorted.length !== 1 ? 's' : ''}`;
+        }
+
+        function updateDashboard() {
+            const filtered = getFilteredData();
+            renderMetrics(filtered);
+            renderCharts(filtered);
+            renderTable(filtered);
+        }
+
+        function resetFilters() {
+            ["status-filter", "lang-filter", "tag-filter"].forEach(id => document.getElementById(id).value = "");
+            updateDashboard();
+        }
+
+        window.onload = loadData;
+    </script>
+</body>
+</html>
+
+
