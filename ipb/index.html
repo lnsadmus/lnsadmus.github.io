@@ -423,7 +423,7 @@ const CSV_URL = "https://script.google.com/macros/s/AKfycbzg0Ch-kElonNhVguxO33eh
                     </td>
                     `;
 if (content.length <= 0) {
-    selectedVideoTd =  '—';
+    selectedVideoTd =  `<td class="px-8 py-6">—</td>`;
 }
                 
                 if (urgencyText.includes('Urgent')) urgencyClass = 'bg-red-500/10 text-red-400 border border-red-500/30';
