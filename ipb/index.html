@@ -414,7 +414,18 @@ const CSV_URL = "https://script.google.com/macros/s/AKfycbzg0Ch-kElonNhVguxO33eh
                 let urgencyClass = 'bg-zinc-700 text-zinc-300';
                 const urgencyText = row["Niveau d'urgence / Catégorie"] || '—';
                 const content = row["Fichier Téléchargé ?"];
-  
+                const selectedVideoTd = '<td class="px-8 py-6">
+                      <a href="${content}" target="_blank" rel="noopener noreferrer" class="video-icon-link">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="video-icon">
+                          <path d="M7.294 18.062c-.083.05-.183.05-.264 0-.462-.27-.729-.778-.729-1.312V7.25c0-.534.267-1.042.729-1.312.462-.27.973-.243 1.401.071l7.653 5.438c.428.314.675.822.675 1.353s-.247 1.039-.675 1.353l-7.653 5.438c-.428.314-.939.341-1.401.071Z"/>
+                        </svg>
+                      </a>
+                    </td>
+                    ';
+if (content.length <= 0) {
+    selectedVideoTd =  '—';
+}
+                
                 if (urgencyText.includes('Urgent')) urgencyClass = 'bg-red-500/10 text-red-400 border border-red-500/30';
                 else if (urgencyText.includes('Success')) urgencyClass = 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30';
                 else if (urgencyText.includes('Problème')) urgencyClass = 'bg-amber-500/10 text-amber-400 border border-amber-500/30';
@@ -434,19 +445,7 @@ const CSV_URL = "https://script.google.com/macros/s/AKfycbzg0Ch-kElonNhVguxO33eh
                             ${urgencyText}
                         </span>
                     </td>
-                    <td class="px-8 py-6">
-                    if (${content}) {
-                      <a href="${content}" target="_blank" rel="noopener noreferrer" class="video-icon-link">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="video-icon">
-                          <path d="M7.294 18.062c-.083.05-.183.05-.264 0-.462-.27-.729-.778-.729-1.312V7.25c0-.534.267-1.042.729-1.312.462-.27.973-.243 1.401.071l7.653 5.438c.428.314.675.822.675 1.353s-.247 1.039-.675 1.353l-7.653 5.438c-.428.314-.939.341-1.401.071Z"/>
-                        </svg>
-                      </a>
-                    } else {
-                        '-'; // Display a dash if no valid link
-                    }
-                    </td>
-
-                    `;
+                    ${selectedVideoTd}
                 tbody.appendChild(tr);
             });
 
