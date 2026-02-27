@@ -96,6 +96,7 @@
                             <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Résumé</th>
                             <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thèmes</th>
                             <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Urgence</th>
+                            <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contenu</th>
                         </tr>
                     </thead>
                     <tbody id="table-body" class="bg-white divide-y divide-gray-200"></tbody>
@@ -393,7 +394,8 @@ const CSV_URL = "https://script.google.com/macros/s/AKfycbzg0Ch-kElonNhVguxO33eh
                 
                 let urgencyClass = 'bg-zinc-700 text-zinc-300';
                 const urgencyText = row["Niveau d'urgence / Catégorie"] || '—';
-                
+                const content = row["Fichier Téléchargé ?"] || '—';
+  
                 if (urgencyText.includes('Urgent')) urgencyClass = 'bg-red-500/10 text-red-400 border border-red-500/30';
                 else if (urgencyText.includes('Success')) urgencyClass = 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30';
                 else if (urgencyText.includes('Problème')) urgencyClass = 'bg-amber-500/10 text-amber-400 border border-amber-500/30';
@@ -413,6 +415,7 @@ const CSV_URL = "https://script.google.com/macros/s/AKfycbzg0Ch-kElonNhVguxO33eh
                             ${urgencyText}
                         </span>
                     </td>
+                    <td class="px-8 py-6">${content}</td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -533,6 +536,7 @@ async function loadDashboard() {
             "Thèmes 7/ Tags principaux (choisissez 1 à 3)",
             "Thèmes 8/ Tags principaux (choisissez 1 à 3)",
             "Thèmes 9/ Tags principaux (choisissez 1 à 3)"
+            "Thèmes 10/ Tags principaux (choisissez 1 à 3)"
         ];
 
         // Build data objects
